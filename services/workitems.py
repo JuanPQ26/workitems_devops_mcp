@@ -1,7 +1,7 @@
 import httpx
 
 from settings import settings
-from utils.http_client import make_get_request, make_post_request
+from utils.http_client import make_get_request, make_patch_request, make_post_request
 
 
 async def get_workitems_ids_assigned_to_user() -> list[str]:
@@ -166,7 +166,7 @@ async def get_workitem_type_transitions(workitem_type_name: str) -> dict:
     return workitem_type.get("transitions", [])
 
 
-async def get_workitem_transition_list_allowed(
+async def get_workitem_transitions_allowed(
     workitem_type_name: str, workitem_state_name: str
 ) -> list[dict]:
     """
@@ -181,6 +181,34 @@ async def get_workitem_transition_list_allowed(
     """
     workitem_type_transitions = await get_workitem_type_transitions(workitem_type_name)
     return workitem_type_transitions.get(workitem_state_name, [])
+
+
+async def update_workitem_state(workitem_id: str, workitem_state_name: str) -> bool:
+    """
+    Update the state of a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        workitem_state_name: The name of the allowed workitem state (e.g. "To Do", "In Progress", "Done")
+    """
+    try:
+        body = [
+            {
+                "op": "add",
+                "path": "/fields/System.State",
+                "value": workitem_state_name,
+            }
+        ]
+
+        url = f"{settings.AZURE_DEVOPS_BASE_URL}/workitems/{workitem_id}?api-version={settings.AZURE_DEVOPS_API_VERSION}"
+        credentials = ("", settings.AZURE_DEVOPS_ACCESS_TOKEN)
+
+        await make_patch_request(url, body, credentials=credentials)
+
+        return True
+    except Exception as e:
+        print(f"Error updating workitem state: {e}")
+        return False
 
 
 def build_query_to_get_workitems_ids_assigned_to_user() -> str:

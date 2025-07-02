@@ -148,14 +148,14 @@ async def get_workitem_type_states(workitem_type_name: str):
     return result
 
 
-@mcp.tool("get_workitem_transition_list_allowed")
-async def get_workitem_transition_list_allowed(
+@mcp.tool("get_workitem_transitions_allowed")
+async def get_workitem_transitions_allowed(
     workitem_type_name: str, workitem_state_name: str
 ):
     """
     Get a list of allowed transitions for a workitem
     """
-    transitions = await workitems.get_workitem_transition_list_allowed(
+    transitions = await workitems.get_workitem_transitions_allowed(
         workitem_type_name, workitem_state_name
     )
 
@@ -170,6 +170,19 @@ async def get_workitem_transition_list_allowed(
         result = "No transitions allowed for this workitem state"
 
     return result
+
+
+@mcp.tool("update_workitem_state")
+async def update_workitem_state(workitem_id: str, workitem_state_name: str):
+    """
+    Update the state of a workitem
+    """
+    result = await workitems.update_workitem_state(workitem_id, workitem_state_name)
+
+    if result:
+        return "Workitem state updated successfully"
+    else:
+        return "Failed to update workitem state"
 
 
 if __name__ == "__main__":

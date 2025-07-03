@@ -211,6 +211,153 @@ async def update_workitem_state(workitem_id: str, workitem_state_name: str) -> b
         return False
 
 
+async def update_workitems_planned_date(
+    workitems_ids: str, planned_date: str
+) -> list[str]:
+    """
+    Update the planned date of a list of workitems
+
+    Args:
+        workitems_ids: A string of workitem IDs (comma separated) (e.g. "1,2,3")
+        planned_date: The planned date to set (e.g. "2025-07-02T00:00:00Z")
+
+    Returns:
+        A list of workitems IDs that were updated
+    """
+    workitems_ids_list = workitems_ids.split(",")
+    workitems_ids_list_updated = []
+    for workitem_id in workitems_ids_list:
+        updated = await update_workitem_planned_date(workitem_id, planned_date)
+        if updated:
+            workitems_ids_list_updated.append(workitem_id)
+
+    return workitems_ids_list_updated
+
+
+async def update_workitem_planned_date(workitem_id: str, planned_date: str) -> bool:
+    """
+    Update the planned date of a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        planned_date: The planned date to set (e.g. "2025-07-02T00:00:00Z")
+
+    Returns:
+        True if the planned date was updated, False otherwise
+    """
+    try:
+        body = [
+            {
+                "op": "add",
+                "path": "/fields/Custom.FechaInicioPlaneada",
+                "value": planned_date,
+            }
+        ]
+
+        url = f"{settings.AZURE_DEVOPS_BASE_URL}/workitems/{workitem_id}?api-version={settings.AZURE_DEVOPS_API_VERSION}"
+        credentials = ("", settings.AZURE_DEVOPS_ACCESS_TOKEN)
+
+        await make_patch_request(url, body, credentials=credentials)
+
+        return True
+    except Exception as e:
+        print(f"Error updating workitem planned date: {e}")
+        return False
+
+
+async def update_workitem_real_effort(workitem_id: str, real_effort: str) -> bool:
+    """
+    Update the real effort of a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        real_effort: The real effort in decimal format to set (e.g. "1.0", "2.0", "3.5")
+
+    Returns:
+        True if the real effort was updated, False otherwise
+    """
+    try:
+        body = [
+            {
+                "op": "add",
+                "path": "/fields/Custom.RealEffort",
+                "value": real_effort,
+            }
+        ]
+
+        url = f"{settings.AZURE_DEVOPS_BASE_URL}/workitems/{workitem_id}?api-version={settings.AZURE_DEVOPS_API_VERSION}"
+        credentials = ("", settings.AZURE_DEVOPS_ACCESS_TOKEN)
+
+        await make_patch_request(url, body, credentials=credentials)
+
+        return True
+    except Exception as e:
+        print(f"Error updating workitem real effort: {e}")
+        return False
+
+
+async def update_workitem_description(workitem_id: str, description: str) -> bool:
+    """
+    Update the description of a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        description: The description to set (e.g. "This is a test description")
+
+    Returns:
+        True if the description was updated, False otherwise
+    """
+    try:
+        body = [
+            {
+                "op": "add",
+                "path": "/fields/System.Description",
+                "value": description,
+            }
+        ]
+
+        url = f"{settings.AZURE_DEVOPS_BASE_URL}/workitems/{workitem_id}?api-version={settings.AZURE_DEVOPS_API_VERSION}"
+        credentials = ("", settings.AZURE_DEVOPS_ACCESS_TOKEN)
+
+        await make_patch_request(url, body, credentials=credentials)
+
+        return True
+    except Exception as e:
+        print(f"Error updating workitem description: {e}")
+        return False
+
+
+async def add_workitem_comment(workitem_id: str, comment: str) -> bool:
+    """
+    Add a comment to a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        comment: The comment to add (e.g. "This is a test comment")
+
+    Returns:
+        True if the comment was added, False otherwise
+    """
+    try:
+        body = [
+            {
+                "op": "add",
+                "path": "/fields/System.History",
+                "value": comment,
+            }
+        ]
+
+        url = f"{settings.AZURE_DEVOPS_BASE_URL}/workitems/{workitem_id}?api-version={settings.AZURE_DEVOPS_API_VERSION}"
+        credentials = ("", settings.AZURE_DEVOPS_ACCESS_TOKEN)
+
+        await make_patch_request(url, body, credentials=credentials)
+
+        return True
+    except Exception as e:
+        print(f"Error adding workitem comment: {e}")
+        return False
+
+
 def build_query_to_get_workitems_ids_assigned_to_user() -> str:
     """
     Build a query to get all workitems assigned to a user

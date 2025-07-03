@@ -84,10 +84,10 @@ async def get_workitems_details_by_ids(workitems_ids: str):
     Get a workitem by its ID
 
     Args:
-        workitems_ids: A list of workitem IDs (comma separated)
+        workitems_ids: A string of workitem IDs (comma separated) (e.g. "1,2,3")
 
     Returns:
-        A list of workitems details
+        A list of workitems details (one per workitem)
     """
     workitems_details = await workitems.get_workitems_details_by_ids(workitems_ids)
 
@@ -107,7 +107,7 @@ async def get_all_workitems_types():
     Get all workitem types
 
     Returns:
-        A list of workitem types
+        A list of workitem types details
     """
     workitem_types = await workitems.get_all_workitems_types()
     result = "\n\n".join(
@@ -126,7 +126,7 @@ async def get_workitem_type_by_name(name: str):
         name: The name of the workitem type (e.g. "Task", "Bug", "Feature")
 
     Returns:
-        A workitem type
+        A workitem type details
     """
     workitem_type = await workitems.get_workitem_type_by_name(name)
     result = format_workitem_type(workitem_type)
@@ -138,6 +138,12 @@ async def get_workitem_type_by_name(name: str):
 async def get_workitem_type_states(workitem_type_name: str):
     """
     Get all workitem type states
+
+    Args:
+        workitem_type_name: The name of the workitem type (e.g. "Task", "Bug", "Feature")
+
+    Returns:
+        A list of workitem type states
     """
     workitem_type_states = await workitems.get_workitem_type_states(workitem_type_name)
     result = "\n\n".join(
@@ -154,6 +160,13 @@ async def get_workitem_transitions_allowed(
 ):
     """
     Get a list of allowed transitions for a workitem
+
+    Args:
+        workitem_type_name: The name of the workitem type (e.g. "Task", "Bug", "Feature")
+        workitem_state_name: The name of the workitem state (e.g. "To Do", "In Progress", "Done")
+
+    Returns:
+        A list of allowed transitions for the workitem
     """
     transitions = await workitems.get_workitem_transitions_allowed(
         workitem_type_name, workitem_state_name
@@ -176,6 +189,13 @@ async def get_workitem_transitions_allowed(
 async def update_workitem_state(workitem_id: str, workitem_state_name: str):
     """
     Update the state of a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        workitem_state_name: The name of the workitem state to set (e.g. "To Do", "In Progress", "Done")
+
+    Returns:
+        A message with the result of the operation
     """
     result = await workitems.update_workitem_state(workitem_id, workitem_state_name)
 
@@ -183,6 +203,106 @@ async def update_workitem_state(workitem_id: str, workitem_state_name: str):
         return "Workitem state updated successfully"
     else:
         return "Failed to update workitem state"
+
+
+@mcp.tool("update_workitem_planned_date")
+async def update_workitem_planned_date(workitem_id: str, planned_date: str):
+    """
+    Update the planned date of a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        planned_date: The planned date to set take into account the timezone (e.g. in colombia "2025-07-02T00:00:00Z" + 5h)
+
+    Returns:
+        A message with the result of the operation
+    """
+    result = await workitems.update_workitem_planned_date(workitem_id, planned_date)
+
+    if result:
+        return "Workitem planned date updated successfully"
+    else:
+        return "Failed to update workitem planned date"
+
+
+@mcp.tool("update_workitem_real_effort")
+async def update_workitem_real_effort(workitem_id: str, real_effort: str):
+    """
+    Update the real effort of a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        real_effort: The real effort to set (e.g. "1.0", "2.0", "3.5")
+
+    Returns:
+        A message with the result of the operation
+    """
+    result = await workitems.update_workitem_real_effort(workitem_id, real_effort)
+
+    if result:
+        return "Workitem real effort updated successfully"
+    else:
+        return "Failed to update workitem real effort"
+
+
+@mcp.tool("update_workitem_description")
+async def update_workitem_description(workitem_id: str, description: str):
+    """
+    Update the description of a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        description: The description to set and you can add tags like <ul>, <b>, <br>, <a href>, etc.
+
+    Returns:
+        A message with the result of the operation
+    """
+    result = await workitems.update_workitem_description(workitem_id, description)
+
+    if result:
+        return "Workitem description updated successfully"
+    else:
+        return "Failed to update workitem description"
+
+
+@mcp.tool("update_workitems_planned_date")
+async def update_workitems_planned_date(workitems_ids: str, planned_date: str):
+    """
+    Update the planned date of a list of workitems
+
+    Args:
+        workitems_ids: A string of workitem IDs (comma separated) (e.g. "1,2,3")
+        planned_date: The planned date to set (e.g. "2025-07-02T00:00:00Z")
+
+    Returns:
+        A message with the result of the operation
+    """
+    result = await workitems.update_workitems_planned_date(workitems_ids, planned_date)
+
+    if result:
+        return f"Workitems planned date updated successfully: {','.join(result)}"
+    else:
+        return "Failed to update workitems planned date"
+
+
+@mcp.tool("add_workitem_comment")
+async def add_workitem_comment(workitem_id: str, comment: str):
+    """
+    Add a comment to a workitem
+
+    Args:
+        workitem_id: The ID of the workitem
+        comment: The comment to add (e.g. "This is a test comment")
+
+    Returns:
+        A message with the result of the operation
+    """
+    result = await workitems.add_workitem_comment(workitem_id, comment)
+
+    if result:
+        return "Workitem comment added successfully"
+    else:
+        return "Failed to add workitem comment"
 
 
 if __name__ == "__main__":

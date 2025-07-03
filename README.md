@@ -6,10 +6,12 @@ Un servidor **Model Context Protocol (MCP)** que proporciona herramientas para i
 
 Este proyecto permite que modelos de lenguaje (LLMs) y aplicaciones de IA interactúen directamente con Azure DevOps para:
 - Consultar work items asignados al usuario
-- Filtrar work items por criterios específicos
-- Obtener detalles completos de work items
+- Filtrar work items por criterios específicos y fechas
+- Obtener detalles completos de work items con formateo inteligente
 - Gestionar tipos de work items y sus estados
-- Actualizar estados de work items
+- Actualizar estados, fechas planeadas y esfuerzo real de work items
+- Modificar descripciones y agregar comentarios
+- Operaciones en lote para múltiples work items
 
 ## 🏗️ Arquitectura
 
@@ -67,6 +69,15 @@ python main.py
 
 El servidor MCP expone las siguientes herramientas:
 
+### 🆕 Nuevas Funcionalidades
+
+**Actualizaciones recientes incluyen:**
+- ✅ Actualización de fechas planeadas (individual y en lote)
+- ✅ Gestión de esfuerzo real con formateo inteligente
+- ✅ Modificación de descripciones con soporte HTML
+- ✅ Sistema de comentarios para seguimiento
+- ✅ Formateo mejorado de fechas y esfuerzo
+
 ### 📋 Consulta de Work Items
 
 | Herramienta | Descripción | Parámetros |
@@ -90,6 +101,11 @@ El servidor MCP expone las siguientes herramientas:
 | Herramienta | Descripción | Parámetros |
 |-------------|-------------|------------|
 | `update_workitem_state` | Actualiza el estado de un work item | `workitem_id: str`, `workitem_state_name: str` |
+| `update_workitem_planned_date` | Actualiza la fecha planeada de un work item | `workitem_id: str`, `planned_date: str` |
+| `update_workitem_real_effort` | Actualiza el esfuerzo real de un work item | `workitem_id: str`, `real_effort: str` |
+| `update_workitem_description` | Actualiza la descripción de un work item | `workitem_id: str`, `description: str` |
+| `update_workitems_planned_date` | Actualiza la fecha planeada de múltiples work items | `workitems_ids: str`, `planned_date: str` |
+| `add_workitem_comment` | Agrega un comentario a un work item | `workitem_id: str`, `comment: str` |
 
 ## 💡 Ejemplos de Uso
 
@@ -110,6 +126,24 @@ get_workitems_ids_assigned_to_user_by("System.Title CONTAINS 'Backend' AND Micro
 ```python
 # Obtener detalles de múltiples work items
 get_workitems_details_by_ids("12345,67890")
+```
+
+### Ejemplo 4: Actualizar fechas planeadas
+```python
+# Actualizar fecha planeada de un work item
+update_workitem_planned_date("12345", "2025-01-15T00:00:00Z")
+
+# Actualizar fecha planeada de múltiples work items
+update_workitems_planned_date("12345,67890", "2025-01-15T00:00:00Z")
+```
+
+### Ejemplo 5: Gestionar esfuerzo y comentarios
+```python
+# Actualizar esfuerzo real de un work item
+update_workitem_real_effort("12345", "2.5")
+
+# Agregar comentario a un work item
+add_workitem_comment("12345", "Trabajo completado según especificaciones")
 ```
 
 ## 🔧 Configuración Avanzada
@@ -150,6 +184,7 @@ get_workitems_details_by_ids("12345,67890")
 - Formatea respuestas para presentación en español
 - Convierte datos de API a formato legible
 - Maneja fechas, esfuerzo y estados
+- Incluye funciones especializadas para formateo de fechas ISO y conversión de esfuerzo a horas/minutos
 
 ### Agregar Nuevas Herramientas
 
@@ -324,7 +359,7 @@ work_items = get_workitems_ids_assigned_to_user_by_planned_date("2025-01-02")
 details = get_workitems_details_by_ids(work_items)
 ```
 
-#### Caso 2: Gestión de Estados
+#### Caso 2: Gestión de Estados y Actualizaciones
 ```python
 # 1. Verificar estados disponibles
 states = get_workitem_type_states("Task")
@@ -334,6 +369,13 @@ transitions = get_workitem_transitions_allowed("Task", "To Do")
 
 # 3. Actualizar estado
 update_workitem_state("12345", "In Progress")
+
+# 4. Actualizar fecha planeada y esfuerzo
+update_workitem_planned_date("12345", "2025-01-20T08:00:00Z")
+update_workitem_real_effort("12345", "3.5")
+
+# 5. Agregar comentario con el progreso
+add_workitem_comment("12345", "Actualizado el estado y programado para completar el 20 de enero")
 ```
 
 #### Caso 3: Filtros Avanzados
@@ -342,6 +384,22 @@ update_workitem_state("12345", "In Progress")
 filtered = get_workitems_ids_assigned_to_user_by(
     "System.WorkItemType = 'Bug' AND Microsoft.VSTS.Common.Priority <= 2"
 )
+```
+
+#### Caso 4: Operaciones en Lote y Gestión Avanzada
+```python
+# 1. Obtener work items de una fecha específica
+workitems = get_workitems_ids_assigned_to_user_by_planned_date("2025-01-15")
+
+# 2. Actualizar fecha planeada de múltiples work items
+update_workitems_planned_date(workitems, "2025-01-20T08:00:00Z")
+
+# 3. Actualizar descripción con HTML
+update_workitem_description("12345", 
+    "<b>Actualización:</b><br/><ul><li>Cambio de fecha</li><li>Ajuste de prioridad</li></ul>")
+
+# 4. Agregar comentario de seguimiento
+add_workitem_comment("12345", "Reprogramado debido a dependencias externas")
 ```
 
 ### Paso 6: Personalización y Extensión
@@ -372,6 +430,12 @@ Editar `utils/formatters.py` para cambiar cómo se presentan los datos:
 def format_workitem(workitem: dict) -> str:
     # Personalizar formato de salida
     return f"Mi formato personalizado: {workitem}"
+
+def format_effort(effort: str) -> str:
+    # Formatear esfuerzo en formato personalizado
+    hours = int(float(effort))
+    minutes = int((float(effort) - hours) * 60)
+    return f"{hours} horas {minutes} minutos"
 ```
 
 ### Paso 7: Testing y Debugging
@@ -380,11 +444,25 @@ def format_workitem(workitem: dict) -> str:
 ```python
 # Crear script de prueba
 import asyncio
-from services.workitems import get_workitems_ids_assigned_to_user
+from services.workitems import (
+    get_workitems_ids_assigned_to_user,
+    update_workitem_planned_date,
+    add_workitem_comment
+)
 
 async def test():
+    # Probar consulta básica
     result = await get_workitems_ids_assigned_to_user()
     print(f"Work items encontrados: {result}")
+    
+    # Probar actualización de fecha
+    if result:
+        update_result = await update_workitem_planned_date(result[0], "2025-01-15T08:00:00Z")
+        print(f"Fecha actualizada: {update_result}")
+        
+        # Probar agregar comentario
+        comment_result = await add_workitem_comment(result[0], "Prueba de comentario")
+        print(f"Comentario agregado: {comment_result}")
 
 asyncio.run(test())
 ```
@@ -455,7 +533,9 @@ sudo systemctl start workitems-mcp
 4. **Rate limiting**: Considera implementar rate limiting para evitar excesos
 5. **Caching**: Para consultas frecuentes, considera implementar cache
 6. **Logging**: Usa logs para debugging, pero no loggees información sensible
-7. **Testing**: Crea tests unitarios para tus nuevas funcionalidades
+7. **Operaciones en lote**: Aprovecha las funciones de actualización masiva para eficiencia
+8. **Formateo inteligente**: Utiliza las funciones de formateo para presentar datos de manera legible
+9. **Testing**: Crea tests unitarios para tus nuevas funcionalidades
 
 ### 🔗 Recursos Útiles
 

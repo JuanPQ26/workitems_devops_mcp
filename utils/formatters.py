@@ -1,15 +1,19 @@
 def format_workitem(workitem: dict) -> str:
     fields = workitem.get("fields", {})
 
+    priority = fields.get("Microsoft.VSTS.Common.Priority")
+    effort = fields.get("Microsoft.VSTS.Scheduling.Effort")
+    fecha_inicio_planeada = fields.get("Custom.FechaInicioPlaneada")
+
     return (
         f"ID: {workitem.get('id')}\n"
         f"Título: {fields.get('System.Title')}\n"
         f"Work Item Type: {fields.get('System.WorkItemType')}\n"
         f"Estado: {fields.get('System.State')} ({fields.get('System.Reason')})\n"
         f"Asignado a: {fields.get('System.AssignedTo', {}).get('displayName')}\n"
-        f"Prioridad: {fields.get('Microsoft.VSTS.Common.Priority')}\n"
-        f"Inicio Planeado: {format_date_from_iso(fields.get('Custom.FechaInicioPlaneada', ''))}\n"
-        f"Esfuerzo: {format_effort(fields.get('Microsoft.VSTS.Scheduling.Effort'))}\n"
+        f"Prioridad: {priority if priority else 'Campo prioridad no encontrado'}\n"
+        f"Inicio Planeado: {format_date_from_iso(fecha_inicio_planeada) if fecha_inicio_planeada else 'Campo fecha inicio planeada no encontrado'}\n"
+        f"Esfuerzo: {format_effort(effort) if effort else 'Campo esfuerzo no encontrado'}\n"
         "\n"
         f"Creado por: {fields.get('System.CreatedBy', {}).get('displayName')} el {fields.get('System.CreatedDate', '')}\n"
         f"Último cambio por: {fields.get('System.ChangedBy', {}).get('displayName')} el {fields.get('System.ChangedDate', '')}\n"
